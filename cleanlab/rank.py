@@ -31,7 +31,7 @@ Alternatively it is ok if your model was trained on a separate dataset and you a
 labels in data that was previously held-out.
 """
 
-
+import pandas as pd
 import numpy as np
 from typing import List
 import warnings
@@ -480,3 +480,310 @@ def get_confidence_weighted_entropy_for_each_label(
     label_quality_scores = np.log(label_quality_scores + 1) / clipped_scores
 
     return label_quality_scores
+
+
+def vote2score_1d(
+    votes_1d: np.array,
+    pred_probs_1d: np.array,
+    method: str = "self_confidence",
+    adjust_pred_probs: bool = False
+) -> np.array:
+    """
+    Parameters
+    ----------
+    votes_1d : np.array (shape (M',))
+      M' different Labels given by annotators for one sample.
+
+    pred_probs_1d : np.array (shape (K,))
+      To an example `x`, pred_probs_1d is an array of model-predicted probabilities that `x` belongs to each
+      possible class, for each of the K classes. For example, any row of Predicted-probabilities in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function.
+
+    method : str
+      `method` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function
+
+    adjust_pred_probs : bool, optional
+      `adjust_pred_probs` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function.
+
+    Returns
+    -------
+    label_quality_scores : np.array (shape(M,))
+    Scores are between 0 and 1 where lower scores indicate labels less likely to be correct.
+
+    """
+    res = get_label_quality_scores(
+        labels = votes_1d[:, None],
+        pred_probs=np.tile(pred_probs_1d,(votes_1d.shape[0],1)),
+        method=method,
+        adjust_pred_probs=adjust_pred_probs
+    )
+    return res
+
+def vote2score_2d(
+    votes_2d: np.array,
+    pred_probs_2d: np.array,
+    method: str = "self_confidence",
+    adjust_pred_probs: bool = False
+) -> np.array:
+    """
+    Parameters
+    ----------
+    votes_2d : np.array (shape (N, M))
+      Labels given by M annotators for N samples.
+      Each row corresponding to one sample.
+
+    pred_probs_2d : np.array (shape (N, K))
+      To an example `x`, each row of pred_probs_2d is an array of model-predicted probabilities that `x` belongs to each possible class, for each of the K classes. Predicted-probabilities in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function.
+
+    method : str
+      `method` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function
+
+    adjust_pred_probs : bool, optional
+      `adjust_pred_probs` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function.
+
+    Returns
+    -------
+    label_quality_scores : np.array (shape(M, N))
+    Scores are between 0 and 1 where lower scores indicate labels less likely to be correct.
+
+    """
+    votes_scores_2d = np.zeros_like(votes_2d, dtype=float)
+    N = votes_2d.shape[0]
+
+    for idx in range(N):
+        # get unique labels from annotators' labels
+        votes_unique_1d = np.unique(votes_2d[idx])
+        # compute scores for each unique labels
+        votes_unique_1d_scores =vote2score_1d(
+            votes_unique_1d,
+            pred_probs_2d[idx],
+            method,
+            adjust_pred_probs=adjust_pred_probs
+        )
+        # in each row of votes_scores_2d matrix, record score for corresponding annotator's label
+        votes_scores_2d[idx, :] = \
+            votes_unique_1d_scores[np.where(votes_2d[idx][:, None] == votes_unique_1d[None, :])[1]]
+    return votes_scores_2d
+
+def vote2freq_1d(
+    votes_1d: np.array
+) -> np.array:
+    """
+    Parameters
+    ----------
+    votes_1d : np.array (shape (M',))
+      M' different Labels given by annotators for one sample.
+
+    Returns
+    -------
+    labels_freq : np.array (shape(M',))
+    values are between 0 and 1 where value indicates the fraction of annotators agree on the corresponding label.
+
+    """
+
+    votes_unique, votes_count = np.unique(votes_1d, return_counts=True)
+    return votes_count[np.where(votes_1d[:, None] == votes_unique[None, :])[1]]/votes_1d.shape[0]
+
+def vote2freq_2d(
+    votes_2d: np.array
+) -> np.array:
+    """
+    Parameters
+    ----------
+    votes_2d : np.array (shape (M, N))
+      each row corresponds to M' different Labels given by annotators for the current sample.
+
+    Returns
+    -------
+    labels_freq : np.array (shape(M, N))
+    values are between 0 and 1 where value indicates the fraction of annotators agree on the corresponding label.
+    """
+    return np.apply_along_axis(vote2freq_1d, 1, votes_2d)
+
+def get_overall_score_1d(scores_1d: np.array, labels: np.array, w: float = 1) -> np.float64:
+    """
+    compute overall score for each sample.
+
+    Parameters
+    ----------
+    scores_1d: np.array (shape(M,))
+      a row of annotators' scores for one sample
+      each score should be within [0,1].
+    w: float
+      by default w = 1
+      a scaler in arctan(wx)
+    Returns
+    ----------
+    oS: np.float64
+      overall score for one sample
+    """
+    MIN_ALLOWED = 1e-6
+    MAX_ALLOWED = 2**30
+    scores_1d.sort()
+
+    oR = (scores_1d[-2] - scores_1d[-1])/np.clip((1 - scores_1d[-1]), a_min=MIN_ALLOWED, a_max=MAX_ALLOWED)
+
+    overall_score = 2/np.pi * np.arctan(w*oR)
+
+    return overall_score
+
+def get_overall_score_2d(scores: np.array, labels: np.array, w: float = 1) -> np.array:
+    """
+    compute overall score for each sample.
+
+    Parameters
+    ----------
+    labels: np.array (shape(M, N))
+
+    scores: np.array (shape(M, N))
+      A 2d matrix of scores. Each row corresponds to one sample. scores[i][j]: score of the annotator_j's label of the sample i.
+
+
+    Returns
+    ----------
+    """
+    # check if all scores are in range [0,1]
+    if not ((scores <= 1) & (scores >= 0)).all():
+        raise ValueError("scores are not in interval [0,1]")
+
+    MIN_ALLOWED = 1e-6
+    MAX_ALLOWED = 2**30
+
+    N, M = np.shape(labels)[0], np.shape(scores)[1]
+    overall_score = [ 0 for _ in range(N)]
+    for idx in range(N):
+        labels_unique_1d, index_unique_1d = np.unique(labels[idx], return_index= True)
+
+        if np.shape(index_unique_1d) == 1:
+            oR = (scores_label_unique_1d[-1])/np.clip((1 - scores_label_unique_1d[-1]), a_min=MIN_ALLOWED, a_max=MAX_ALLOWED)
+        else:
+            scores_label_unique_1d = sorted(scores[idx][index_unique_1d])
+            oR = (scores_label_unique_1d[-1] - scores_label_unique_1d[-2])/np.clip((1 - scores_label_unique_1d[-1]), a_min=MIN_ALLOWED, a_max=MAX_ALLOWED)
+
+        overall_score[idx] = 2/np.pi * np.arctan(w*oR)
+
+    return overall_score
+
+def get_label_weighted_score(
+    label_quality_scores: np.array,
+    label_agreements: np.array,
+    alpha: np.float = 0.5,
+    beta: np.float = 1,
+    weighted_method: str = "weighted_arithmetic_mean"
+    ):
+    """
+    compute a weighted score from label_quality_scores and label_agreement
+
+    Parameters
+    ----------
+    label_quality_scores : np.array (shape(N, M))
+      each row represents scores for annotator's label.
+
+    label_agreements : np.array (shape(N, M))
+      each row represents agreement for annotator's label.
+
+    alpha : np.float
+      a positive number between 0 and 1. alpha indicates how much weight we want to put on annotators. Used in weighted arithmetic mean.
+
+    beta : np.float
+      a positive number between 0 and 1. beta indicates how much weight we want to put on annotators. Used in weighted harmonic mean.
+
+    weighted_method: str
+        "weighted_arithmetic_mean": a*label_agreement + (1-a)*label_quality_score
+        "weighted_harmonic_mean": (1+b*b)label_agreement*label_quality_score / (b*b*label_quality_score + label_agreement)
+
+    Returns
+    ----------
+    weighted_scores: np.array (shape(N, M))
+    """
+
+    if weighted_method == "weighted_arithmetic_mean":
+        return alpha*label_agreements + (1-alpha)*label_quality_scores
+    elif weighted_method == "weighted_harmonic_mean":
+        return (1+beta**2)*label_agreements*label_quality_scores/(beta**2*label_quality_scores + label_agreements)
+    else:
+        raise NotImplementedError(f"""weighted method {weighted_method} is not implemented. Choose weighted method from "weighted_arithmetic_mean" or "weighted_harmonic_mean". """)
+
+def get_multiannotator_label_quality_scores(
+    labels: np.array,
+    pred_probs: np.array,
+    alpha: float = 0.5,
+    beta: float = 1,
+    weighted_method: str = "weighted_arithmetic_mean",
+    w: float = 1,
+    method: str = "self_confidence",
+    adjust_pred_probs: bool = False,
+) -> np.array:
+    """Returns label quality scores for each datapoint.
+
+    Parameters
+    ----------
+    labels : np.array
+        2D numpy array of (multiple) given labels for each example.
+		labels[i][j] = given label for i-th example by j-th annotator, i is an integer in {0,...,K-1},
+        j is an integer in {0,..., M-1}.
+
+    pred_probs : np.array, optional
+      same format as for get_label_quality_scores().
+
+    method : str
+      `method` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function
+
+    adjust_pred_probs : bool, optional
+      `adjust_pred_probs` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function.
+
+    Returns
+    -------
+    overall_score: pandas DataFrame (shape(N, M+2))
+    df : pandas DataFrame in which each row corresponds to one example, with columns:
+        score_annotator1, score_annotator2, ..., score_annotatorM, annotator_agreement, overall_score
+
+    """
+
+    # Pass keyword arguments for scoring function
+    try:
+        M = np.shape(labels)[1]
+    except IndexError:
+        raise IndexError(
+            f"""
+            labels matrix is not a 2d np.array. Please use a 2d np.array as labels matrix.
+            """
+        )
+
+    M, N1, K, N = np.shape(labels)[1], np.shape(labels)[0], np.shape(pred_probs)[1], np.shape(pred_probs)[0]
+
+    # check if input matrixes are valid. labels and pred_probs should have the same number of samples.
+    if N1 != N:
+        raise IndexError("The number of rows in labels matrix is not the same as the number of rows in pred_probs matrix. The number of rows is the number of samples. Please review input: labels and pred_prods")
+
+    # check if parameters are valid.
+    if w <= 0:
+        raise ValueError(f"""w is required to be positive""")
+
+    if weighted_method == "weighted_arithmetic_mean" and (alpha >1 or alpha < 0):
+        raise ValueError(f"""alpha = {alpha} is not in range [0, 1]""")
+
+    beta = np.clip(beta, a_min = None, a_max=2**15)
+    if weighted_method == "weighted_harmonic_mean" and (beta < 0):
+        raise ValueError(f"""beta = {beta} is not in range [0, infinity] """)
+
+    # get quality score for each annotator's label
+    label_quality_scores = vote2score_2d(labels, pred_probs, method = method, adjust_pred_probs=adjust_pred_probs)
+
+    # get fraction of agreement for each annotator's label
+    label_agreements = vote2freq_2d(labels)
+
+    # get sample agreement
+    sample_agreement = np.max(label_agreements, axis=1)
+
+    # get weighted score for each label, weigted score combine the label_agreement and label_quality_score
+    label_weighted_scores = get_label_weighted_score(label_quality_scores, label_agreements, alpha, beta, weighted_method)
+
+    # get overall score for each sample
+    overall_scores = get_overall_score_2d(label_weighted_scores, labels, w)
+
+    # generate report as a pandas frame
+    report = np.column_stack((label_quality_scores, sample_agreement, overall_scores))
+
+    report_df = pd.DataFrame(report, columns = ["score_annotator_"+str(i) for i in range(M)] + ["agreement", "overall_score"], index = ["sample_"+ str(j) for j in range(N)])
+
+    return report_df
