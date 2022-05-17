@@ -599,33 +599,6 @@ def vote2freq_2d(
     """
     return np.apply_along_axis(vote2freq_1d, 1, votes_2d)
 
-def get_overall_score_1d(scores_1d: np.array, labels: np.array, w: float = 1) -> np.float64:
-    """
-    compute overall score for each sample.
-
-    Parameters
-    ----------
-    scores_1d: np.array (shape(M,))
-      a row of annotators' scores for one sample
-      each score should be within [0,1].
-    w: float
-      by default w = 1
-      a scaler in arctan(wx)
-    Returns
-    ----------
-    oS: np.float64
-      overall score for one sample
-    """
-    MIN_ALLOWED = 1e-6
-    MAX_ALLOWED = 2**30
-    scores_1d.sort()
-
-    oR = (scores_1d[-2] - scores_1d[-1])/np.clip((1 - scores_1d[-1]), a_min=MIN_ALLOWED, a_max=MAX_ALLOWED)
-
-    overall_score = 2/np.pi * np.arctan(w*oR)
-
-    return overall_score
-
 def get_overall_score_2d(scores: np.array, labels: np.array, w: float = 1) -> np.array:
     """
     compute overall score for each sample.
