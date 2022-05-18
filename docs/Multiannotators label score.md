@@ -45,7 +45,7 @@ Similar to $\alpha$, the larger the $\beta$, the more we trust on annotators. By
 ### chosen label
 Chosen label is the label has the highest label weighted score.
 $$\text{chosen label} = argmax_{label \in [K]}(\text{label\_ weighted\_scores(label)}) $$
-If we set $\alpha$ as $0$ and take the weighted arithmetic mean method, the chosen lable is the label which has the highest label quality score. On the other hand, if we set $\alpha=0$ this label is the consensus label with the majority votes (i.e. chosen label could be different from consensus label)
+If we set $\alpha$ as $1$ and take the weighted arithmetic mean method, the chosen lable is the label which has the highest label quality score. On the other hand, if we set $\alpha=0$ this label is the consensus label with the majority votes (i.e. chosen label could be different from consensus label)
 
 ### overall score for a sample
 `get_overall_score_2d`

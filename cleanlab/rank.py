@@ -595,7 +595,7 @@ def vote2freq_2d(
     Returns
     -------
     labels_freq : np.array (shape(M, N))
-    values are between 0 and 1 where value indicates the fraction of annotators agree on the corresponding label.
+      values are between 0 and 1 where value indicates the fraction of annotators agree on the corresponding label.
     """
     return np.apply_along_axis(vote2freq_1d, 1, votes_2d)
 
@@ -610,9 +610,9 @@ def get_overall_score_2d(scores: np.array, labels: np.array, w: float = 1) -> np
     scores: np.array (shape(M, N))
       A 2d matrix of scores. Each row corresponds to one sample. scores[i][j]: score of the annotator_j's label of the sample i.
 
-
     Returns
     ----------
+    overall_score: np.array (shape(N))
     """
     # check if all scores are in range [0,1]
     if not ((scores <= 1) & (scores >= 0)).all():
@@ -642,7 +642,7 @@ def get_label_weighted_score(
     alpha: np.float = 0.5,
     beta: np.float = 1,
     weighted_method: str = "weighted_arithmetic_mean"
-    ):
+    ) -> np.array:
     """
     compute a weighted score from label_quality_scores and label_agreement
 
@@ -674,7 +674,9 @@ def get_label_weighted_score(
     elif weighted_method == "weighted_harmonic_mean":
         return (1+beta**2)*label_agreements*label_quality_scores/(beta**2*label_quality_scores + label_agreements)
     else:
-        raise NotImplementedError(f"""weighted method {weighted_method} is not implemented. Choose weighted method from "weighted_arithmetic_mean" or "weighted_harmonic_mean". """)
+        raise NotImplementedError(
+            f"""weighted method {weighted_method} is not implemented. Choose weighted method from "weighted_arithmetic_mean" or "weighted_harmonic_mean". """
+            )
 
 def get_multiannotator_label_quality_scores(
     labels: np.array,
@@ -685,8 +687,8 @@ def get_multiannotator_label_quality_scores(
     w: float = 1,
     method: str = "self_confidence",
     adjust_pred_probs: bool = False,
-) -> np.array:
-    """Returns label quality scores for each datapoint.
+) -> pd.DataFrame:
+    """Returns label_quality_scores, label overall score, sample_agreement, for each datapoint.
 
     Parameters
     ----------
@@ -697,6 +699,22 @@ def get_multiannotator_label_quality_scores(
 
     pred_probs : np.array, optional
       same format as for get_label_quality_scores().
+
+    alpha: float
+      `alpha` in the same format expected by the :py:func:`get_label_weighted_scores <cleanlab.rank.get_label_weighted_scores>` function
+      By default, alpha = 0.5
+
+    beta: float
+      `beta` in the same format expected by the :py:func:`get_label_weighted_scores <cleanlab.rank.get_label_weighted_scores>` function
+      By default, beta = 1
+
+    weighted_method: str
+      `weighted_method` in the same format expected by the :py:func:`get_label_weighted_scores <cleanlab.rank.get_label_weighted_scores>` function
+      {"weighted arithmetic mean", "weighted harmonic mean"}
+
+    w: float
+      `w` in the same format expected by the :py:func:`get_overall_scores_2d <cleanlab.rank.get_overall_scores_2d>` function
+      By default, w = 1
 
     method : str
       `method` in the same format expected by the :py:func:`get_label_quality_scores <cleanlab.rank.get_label_quality_scores>` function
