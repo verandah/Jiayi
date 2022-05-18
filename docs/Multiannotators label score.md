@@ -24,7 +24,7 @@ It reflects to what extent the annotators reach agreement on a sample. I don't c
 
 #### Further discussion on agreement
 We can put an extra weight for each annotator, which reflects how much we trust his/her in the annotation process. We might trust experts more than random online annotators. Then the agreement will be:
-$$\text{agr}_w(\text{label}=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
+$$\text{agr}(\text{label}=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
 
 ### label weighted score for each label in a sample
 [`get_label_weighted_score`](https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739#diff-44f75f931f626f8a5e428e4604c79c3f6a7732c958522b32e24ee67130b8e47fR666)
