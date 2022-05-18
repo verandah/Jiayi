@@ -1,6 +1,5 @@
 ## Multiannotators scenario
-commit:
-https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739
+[diff]https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739
 ###
 For each sample,  the `get_multiannotator_label_quality_score` does the following:
 1. call `vote2score_2d`, which will call`get_quality_score` to compute the **label quality score** for each label.
@@ -12,12 +11,12 @@ For each sample,  the `get_multiannotator_label_quality_score` does the followin
 7. combine **label quality score**, **sample agreement** and **overall score** to generate report (in pd frame format) as required.
 
 ### label agreement
-`votes2freq_2d`
+`vote2freq_2d`
 The text-book formula to compute agreement
 $$\text{agr}(label=k) = \frac{\text{number}(\text{label}=k)}{\text{number}\text{(all labels)}}$$
 
 ### sample agreement
-sample agreement is the maximum label agreement over all the annotators' label.
+sample agreement is the maximum label agreement over all the annotators' labels.
 $$\max_k(\text{agr}(\text{label}=k))$$
 It reflects to what extent the annotators reach agreement on a sample. I don't concern about the tie since it doesn't affect the level of agreement (Tie labels does affect the overall score).
 
@@ -26,11 +25,7 @@ We can put an extra weight for each annotator, which reflects how much we trust 
 $$\text{agr}_w(\text{label}=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
 
 ### label weighted score for each label in a sample
-`get_label_weighted_score`
-	+ parameters: $\alpha$, $\beta$, optional
-	+ weighted methods: optional
-
-https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739#diff-44f75f931f626f8a5e428e4604c79c3f6a7732c958522b32e24ee67130b8e47fR666
+[`get_label_weighted_score`]https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739#diff-44f75f931f626f8a5e428e4604c79c3f6a7732c958522b32e24ee67130b8e47fR666
 
 The label quality scores and label agreements come from model and human respectively. That is to say, for each sample, we have ratings from two independent systems. I suggest that we use a common way to aggregate it. One option is to take **the weighted arithmetic mean**
 $$(1-\alpha) \cdot \text{LQS} + \alpha \cdot \text{agr} $$
