@@ -23,7 +23,7 @@ It reflects to what extent the annotators reach agreement on a sample. I don't c
 
 #### Further discussion on agreement
 We can put an extra weight for each annotator, which reflects how much we trust his/her in the annotation process. We might trust experts more than random online annotators. Then the agreement will be:
-$$\text{agr}_{\vec{w}}(label=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
+$$\text{agr}_{w}(\text{label}=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
 
 ### label weighted score for each label in a sample
 `get_label_weighted_score`
@@ -35,7 +35,8 @@ https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb3514173
 The label quality scores and label agreements come from model and human respectively. That is to say, for each sample, we have ratings from two independent systems. I suggest that we use a common way to aggregate it. One option is to take **the weighted arithmetic mean**
 $$(1-\alpha) \cdot \text{LQS} + \alpha \cdot \text{agr} $$
 Another option is to take **the weighted harmonic mean**
-$$\frac{(1+\beta^2)(\text{LQS}\cdot\text{agr})}{\beta^2 \cdot \text{LQS}+ \text{agr}}$$The $\alpha$ (or $\beta$) gives flexibility to balance the rating from model and human. $\alpha$ indicates how much weight we rely on the annotators.
+$$\frac{(1+\beta^2)(\text{LQS}\cdot\text{agr})}{\beta^2 \cdot \text{LQS}+ \text{agr}}$$
+The $\alpha$ (or $\beta$) gives flexibility to balance the rating from model and human. $\alpha$ indicates how much weight we rely on the annotators.
 + $\alpha=1$ means that we only trust the annotator.
 + $\alpha = 0$ implies that we only trust the model prediction.
 + By default we set $\alpha=0.5$ (equal weight).
