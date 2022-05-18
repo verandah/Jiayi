@@ -59,5 +59,5 @@ $$oR = \frac{\text{highest score} - \text{2nd highest score}}{\text{1 - highest 
 + When a mixed situation happens, for example, $\text{1 - highest score} \approx \text{highest score} - \text{2nd highest score}$. The outstanding ratio approximates $1$.
 
 To scale it to $[0,1]$, we apply transformation $f(x) = \frac{2}{\pi} \arctan (wx)$, $w \in [1, +\infty]$ is a parameter to give flexibility to the scaling. By default, we can take $w=1$. The outstanidng score (overall score) is defined as:
-$$\text{overall\_score}_w = \frac{2}{\pi} \arctan (oR)$$
+$$\text{overall\_score}_w = \frac{2}{\pi} \arctan (w*oR)$$
 
