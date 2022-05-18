@@ -639,10 +639,10 @@ def get_overall_score_2d(scores: np.array, labels: np.array, w: float = 1) -> np
 def get_label_weighted_score(
     label_quality_scores: np.array,
     label_agreements: np.array,
-    alpha: np.float = 0.5,
-    beta: np.float = 1,
+    alpha: float = 0.5,
+    beta: float = 1,
     weighted_method: str = "weighted_arithmetic_mean"
-    ) -> np.array:
+) -> np.array:
     """
     compute a weighted score from label_quality_scores and label_agreement
 
