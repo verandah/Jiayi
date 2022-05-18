@@ -1,9 +1,10 @@
 ## Multiannotators scenario
-[diff](https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739)
+[original diff](https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739) \
+[diff](https://github.com/verandah/jiayi/blob/master/cleanlab/rank.py#L485)<-Several updates was added, the newest version starts from line 483 in rank.py
 ###
-For each sample,  the `get_multiannotator_label_quality_score` does the following:
+For any given input labels matrix and predicted probabilities matrix,  the [`get_multiannotator_label_quality_scores`](https://github.com/verandah/jiayi/blob/master/cleanlab/rank.py#L681) does the following:
 1. call `vote2score_2d`, which will call`get_quality_score` to compute the **label quality score** for each label.
-2. call `votes2freq_2d` to compute **label agreements** for each label.
+2. call `vote2freq_2d` to compute **label agreements** for each label.
 3. call `get_label_weighted_score` to aggregate **label agreements** and **label quality score** to get **label weighted score**  for each label.
 4. Choose the label with highset **label weighted score** as **chosen label**.
 5. Choose the highest agreement as **sample agreement**.
