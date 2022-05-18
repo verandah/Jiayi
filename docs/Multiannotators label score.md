@@ -43,12 +43,12 @@ Similar to $\alpha$, the larger the $\beta$, the more we trust on annotators. By
 ### chosen label
 Chosen label is the label has the highest label weighted score.
 $$\text{chosen label} = argmax_{label \in [K]}(\text{label\_ weighted\_scores(label)}) $$
-If we set $\alpha$ as $1$ and take the weighted arithmetic mean method, the chosen lable is the label which has the highest label quality score. On the other hand, if we set $\alpha=0$ this label is the consensus label with the majority votes (i.e. chosen label could be different from consensus label)
+If we set $\alpha$ as $1$ and take the weighted arithmetic mean method, the chosen label is the label which has the highest label quality score. On the other hand, if we set $\alpha=0$ this label is the consensus label with the majority votes (i.e. chosen label could be different from consensus label)
 
 ### overall score for a sample
 [`get_overall_score_2d`](https://github.com/verandah/jiayi/commit/5bb0329352eec5c03268f9adac235bcb35141739#diff-44f75f931f626f8a5e428e4604c79c3f6a7732c958522b32e24ee67130b8e47fR629)
 
-For one sample, consider the label weighted scores for all potential labels. This score is an aggregation of rating from model and huamn. Intuitively, a sample is well-labeled if it 'outstands' in the annotators' labels. 'Outstanding' can be interpreted as a high rating score (the close to 1 the better) and a clear gap from the other labels. In short, a well-labelled sample has a label with high weighted score and low ambiguity. Define outstanding ratio be
+For one sample, consider the label weighted scores for all potential labels. This score is an aggregation of ratings from model and huamn. Intuitively, a sample is well-labeled if it 'outstands' in the annotators' labels. 'Outstands' can be interpreted as a high rating score (the close to 1 the better) and a clear gap from the other labels. In short, a well-labelled sample is expected to has a label with high weighted score and low ambiguity. We can define a variable named outstanding ratio (oR) as
 $$oR = \frac{\text{highest score} - \text{2nd highest score}}{\text{1 - highest score}} \in [0, \infty]$$
 (Note: the score refers to the label weighted score)
 + When the chosen label is perfect (i.e. it has highest score = 1, it has largest gap from 2nd one), the outstanding ratio is $\frac{1-0}{1-1} =\infty$
