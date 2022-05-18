@@ -202,7 +202,6 @@ def get_label_quality_scores(
 
         pred_probs = _subtract_confident_thresholds(labels, pred_probs)
 
-    # Pass keyword arguments for scoring function
     input = {"labels": labels, "pred_probs": pred_probs}
 
     # Calculate scores
