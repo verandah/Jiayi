@@ -23,7 +23,7 @@ It reflects to what extent the annotators reach agreement on a sample. I don't c
 
 #### Further discussion on agreement
 We can put an extra weight for each annotator, which reflects how much we trust his/her in the annotation process. We might trust experts more than random online annotators. Then the agreement will be:
-$$\text{agr}_{w}(\text{label}=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
+$$\text{agr}_w(\text{label}=k) = \frac{\sum_{\text{label}=k} w_i}{\sum_{i \in M} w_i}$$
 
 ### label weighted score for each label in a sample
 `get_label_weighted_score`
